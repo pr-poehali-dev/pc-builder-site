@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -178,7 +179,21 @@ const forumPosts: ForumPost[] = [
   }
 ];
 
+const getStoredPosts = (): ForumPost[] => {
+  const stored = localStorage.getItem('forumPosts');
+  if (!stored) {
+    localStorage.setItem('forumPosts', JSON.stringify(forumPosts));
+    return forumPosts;
+  }
+  return JSON.parse(stored);
+};
+
+const savePosts = (posts: ForumPost[]) => {
+  localStorage.setItem('forumPosts', JSON.stringify(posts));
+};
+
 export default function Index() {
+  const navigate = useNavigate();
   const [selectedComponents, setSelectedComponents] = useState<{ [key: string]: Component }>({});
   const [activeTab, setActiveTab] = useState('constructor');
   const [openPopovers, setOpenPopovers] = useState<{ [key: string]: boolean }>({});
@@ -186,10 +201,14 @@ export default function Index() {
   const [newPostTitle, setNewPostTitle] = useState('');
   const [newPostContent, setNewPostContent] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Обсуждение');
-  const [posts, setPosts] = useState(forumPosts);
+  const [posts, setPosts] = useState<ForumPost[]>([]);
   const [expandedPost, setExpandedPost] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState<{ [key: string]: string }>({});
   const forumRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setPosts(getStoredPosts());
+  }, []);
 
   const scrollToForum = () => {
     forumRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -284,10 +303,13 @@ export default function Index() {
       timestamp: 'Только что'
     };
 
-    setPosts([newPost, ...posts]);
+    const updatedPosts = [newPost, ...posts];
+    setPosts(updatedPosts);
+    savePosts(updatedPosts);
     setNewPostTitle('');
     setNewPostContent('');
     toast.success('Пост создан!');
+    navigate(`/forum/${newPost.id}`);
   };
 
   const handleAddReply = (postId: string) => {
@@ -306,27 +328,31 @@ export default function Index() {
       likes: 0
     };
 
-    setPosts(posts.map(post => 
+    const updatedPosts = posts.map(post => 
       post.id === postId 
         ? { ...post, replies: [...post.replies, newReply] }
         : post
-    ));
+    );
 
+    setPosts(updatedPosts);
+    savePosts(updatedPosts);
     setReplyContent({ ...replyContent, [postId]: '' });
     toast.success('Ответ добавлен!');
   };
 
   const handleLikePost = (postId: string) => {
-    setPosts(posts.map(post => 
+    const updatedPosts = posts.map(post => 
       post.id === postId 
         ? { ...post, likes: post.likes + 1 }
         : post
-    ));
+    );
+    setPosts(updatedPosts);
+    savePosts(updatedPosts);
     toast.success('👍');
   };
 
   const handleLikeReply = (postId: string, replyId: string) => {
-    setPosts(posts.map(post => 
+    const updatedPosts = posts.map(post => 
       post.id === postId
         ? {
             ...post,
@@ -337,7 +363,9 @@ export default function Index() {
             )
           }
         : post
-    ));
+    );
+    setPosts(updatedPosts);
+    savePosts(updatedPosts);
     toast.success('👍');
   };
 
@@ -639,7 +667,7 @@ export default function Index() {
                         <div className="flex items-start justify-between gap-3 mb-2">
                           <div className="flex-1 min-w-0">
                             <h3 className="font-bold text-lg hover:text-primary transition-colors truncate cursor-pointer"
-                                onClick={() => setExpandedPost(isExpanded ? null : post.id)}>
+                                onClick={() => navigate(`/forum/${post.id}`)}>
                               {post.title}
                             </h3>
                             <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
