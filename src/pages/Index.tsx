@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 
@@ -86,11 +88,96 @@ const prebuiltConfigs = [
   { name: 'Workstation Pro', description: 'Рендеринг 3D', components: ['cpu1', 'gpu1', 'ram1', 'mb1', 'psu1', 'ssd1'], price: 3919 },
 ];
 
+interface ForumPost {
+  id: string;
+  author: string;
+  avatar: string;
+  title: string;
+  content: string;
+  category: string;
+  replies: number;
+  views: number;
+  likes: number;
+  timestamp: string;
+}
+
+const forumPosts: ForumPost[] = [
+  {
+    id: '1',
+    author: 'TechMaster',
+    avatar: 'TM',
+    title: 'Лучшая сборка для игр в 2024?',
+    content: 'Собираю новый ПК для игр в 4K. Стоит ли брать RTX 4090 или подождать новое поколение?',
+    category: 'Обсуждение',
+    replies: 24,
+    views: 1542,
+    likes: 18,
+    timestamp: '2 часа назад'
+  },
+  {
+    id: '2',
+    author: 'BuilderPro',
+    avatar: 'BP',
+    title: 'Помогите с выбором охлаждения',
+    content: 'Взял i9-14900K, не могу определиться между водянкой и башенным кулером. Что посоветуете?',
+    category: 'Вопросы',
+    replies: 15,
+    views: 892,
+    likes: 12,
+    timestamp: '5 часов назад'
+  },
+  {
+    id: '3',
+    author: 'GamerX',
+    avatar: 'GX',
+    title: 'Собрал свою первую сборку!',
+    content: 'Спасибо сообществу за помощь! Ryzen 7 7800X3D + RTX 4070 Ti. Всё работает отлично!',
+    category: 'Сборки',
+    replies: 8,
+    views: 654,
+    likes: 32,
+    timestamp: '1 день назад'
+  },
+  {
+    id: '4',
+    author: 'PCEnthusiast',
+    avatar: 'PE',
+    title: 'DDR5 vs DDR4: стоит ли переплачивать?',
+    content: 'Разница в цене существенная. Действительно ли DDR5 даёт такой прирост производительности?',
+    category: 'Обсуждение',
+    replies: 31,
+    views: 2103,
+    likes: 25,
+    timestamp: '2 дня назад'
+  },
+  {
+    id: '5',
+    author: 'OverclockerKing',
+    avatar: 'OK',
+    title: 'Разогнал 7950X до 5.9 GHz!',
+    content: 'Делюсь результатами разгона на воде. Температуры стабильные, бенчмарки прилагаю.',
+    category: 'Разгон',
+    replies: 19,
+    views: 1876,
+    likes: 45,
+    timestamp: '3 дня назад'
+  }
+];
+
 export default function Index() {
   const [selectedComponents, setSelectedComponents] = useState<{ [key: string]: Component }>({});
   const [activeTab, setActiveTab] = useState('constructor');
   const [openPopovers, setOpenPopovers] = useState<{ [key: string]: boolean }>({});
   const [filters, setFilters] = useState<{ [key: string]: { priceRange: [number, number]; brand: string; sortBy: string } }>({});
+  const [newPostTitle, setNewPostTitle] = useState('');
+  const [newPostContent, setNewPostContent] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('Обсуждение');
+  const [posts, setPosts] = useState(forumPosts);
+  const forumRef = useRef<HTMLDivElement>(null);
+
+  const scrollToForum = () => {
+    forumRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const categoryNames = {
     cpu: 'Процессор',
@@ -160,6 +247,31 @@ export default function Index() {
     setSelectedComponents(newSelection);
     setActiveTab('constructor');
     toast.success(`Загружена "${config.name}"`);
+  };
+
+  const handleCreatePost = () => {
+    if (!newPostTitle.trim() || !newPostContent.trim()) {
+      toast.error('Заполните все поля');
+      return;
+    }
+
+    const newPost: ForumPost = {
+      id: Date.now().toString(),
+      author: 'Вы',
+      avatar: 'ВЫ',
+      title: newPostTitle,
+      content: newPostContent,
+      category: selectedCategory,
+      replies: 0,
+      views: 0,
+      likes: 0,
+      timestamp: 'Только что'
+    };
+
+    setPosts([newPost, ...posts]);
+    setNewPostTitle('');
+    setNewPostContent('');
+    toast.success('Пост создан!');
   };
 
   const totalPrice = Object.values(selectedComponents).reduce((sum, comp) => sum + comp.price, 0);
@@ -381,7 +493,150 @@ export default function Index() {
             )}
           </TabsContent>
         </Tabs>
+
+        <div ref={forumRef} className="mt-16 space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold flex items-center gap-3">
+                <Icon name="MessageSquare" size={32} className="text-primary" />
+                Форум сообщества
+              </h2>
+              <p className="text-muted-foreground mt-1">Обсуждайте сборки, делитесь опытом и получайте советы</p>
+            </div>
+            <Button size="lg" onClick={scrollToForum}>
+              <Icon name="PenSquare" size={18} className="mr-2" />
+              Создать тему
+            </Button>
+          </div>
+
+          <Card className="bg-gradient-to-br from-primary/5 to-accent/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Icon name="PenSquare" size={20} />
+                Создать новую тему
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Заголовок</Label>
+                <Input 
+                  placeholder="О чём хотите рассказать?"
+                  value={newPostTitle}
+                  onChange={(e) => setNewPostTitle(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Категория</Label>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Обсуждение">Обсуждение</SelectItem>
+                    <SelectItem value="Вопросы">Вопросы</SelectItem>
+                    <SelectItem value="Сборки">Сборки</SelectItem>
+                    <SelectItem value="Разгон">Разгон</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Сообщение</Label>
+                <Textarea 
+                  placeholder="Расскажите подробнее..."
+                  value={newPostContent}
+                  onChange={(e) => setNewPostContent(e.target.value)}
+                  rows={4}
+                />
+              </div>
+              <Button onClick={handleCreatePost} size="lg" className="w-full">
+                <Icon name="Send" size={18} className="mr-2" />
+                Опубликовать
+              </Button>
+            </CardContent>
+          </Card>
+
+          <div className="space-y-3">
+            {posts.map((post) => (
+              <Card key={post.id} className="hover:shadow-lg transition-all cursor-pointer group">
+                <CardContent className="p-5">
+                  <div className="flex gap-4">
+                    <div className="w-12 h-12 shrink-0 rounded-full bg-primary flex items-center justify-center">
+                      <span className="text-primary-foreground font-bold text-sm">
+                        {post.avatar}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-lg group-hover:text-primary transition-colors truncate">
+                            {post.title}
+                          </h3>
+                          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                            <span className="font-medium">{post.author}</span>
+                            <span>•</span>
+                            <span>{post.timestamp}</span>
+                            <span>•</span>
+                            <Badge variant="outline" className="text-xs">{post.category}</Badge>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{post.content}</p>
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1 hover:text-primary transition-colors cursor-pointer">
+                          <Icon name="ThumbsUp" size={14} />
+                          <span>{post.likes}</span>
+                        </div>
+                        <div className="flex items-center gap-1 hover:text-primary transition-colors cursor-pointer">
+                          <Icon name="MessageCircle" size={14} />
+                          <span>{post.replies}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Icon name="Eye" size={14} />
+                          <span>{post.views}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="flex justify-center pt-4">
+            <Button variant="outline" size="lg">
+              Показать ещё
+              <Icon name="ChevronDown" size={18} className="ml-2" />
+            </Button>
+          </div>
+        </div>
       </div>
+
+      <footer className="mt-16 border-t bg-card/50">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
+                <Icon name="Cpu" className="text-primary-foreground" size={24} />
+              </div>
+              <div>
+                <p className="font-bold">PC Builder</p>
+                <p className="text-xs text-muted-foreground">© 2024 Все права защищены</p>
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <Button variant="ghost" size="icon" onClick={scrollToForum}>
+                <Icon name="MessageSquare" size={20} />
+              </Button>
+              <Button variant="ghost" size="icon">
+                <Icon name="Github" size={20} />
+              </Button>
+              <Button variant="ghost" size="icon">
+                <Icon name="Twitter" size={20} />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
