@@ -88,6 +88,15 @@ const prebuiltConfigs = [
   { name: 'Workstation Pro', description: 'Рендеринг 3D', components: ['cpu1', 'gpu1', 'ram1', 'mb1', 'psu1', 'ssd1'], price: 3919 },
 ];
 
+interface ForumReply {
+  id: string;
+  author: string;
+  avatar: string;
+  content: string;
+  timestamp: string;
+  likes: number;
+}
+
 interface ForumPost {
   id: string;
   author: string;
@@ -95,7 +104,7 @@ interface ForumPost {
   title: string;
   content: string;
   category: string;
-  replies: number;
+  replies: ForumReply[];
   views: number;
   likes: number;
   timestamp: string;
@@ -109,7 +118,10 @@ const forumPosts: ForumPost[] = [
     title: 'Лучшая сборка для игр в 2024?',
     content: 'Собираю новый ПК для игр в 4K. Стоит ли брать RTX 4090 или подождать новое поколение?',
     category: 'Обсуждение',
-    replies: 24,
+    replies: [
+      { id: 'r1', author: 'ProGamer', avatar: 'PG', content: 'Я взял 4090, не жалею! Все игры на ультра в 4K идут на 120+ fps', timestamp: '1 час назад', likes: 5 },
+      { id: 'r2', author: 'TechExpert', avatar: 'TE', content: 'Советую подождать. Новое поколение выйдет через 6 месяцев с лучшим соотношением цена/производительность', timestamp: '45 мин назад', likes: 3 }
+    ],
     views: 1542,
     likes: 18,
     timestamp: '2 часа назад'
@@ -121,7 +133,9 @@ const forumPosts: ForumPost[] = [
     title: 'Помогите с выбором охлаждения',
     content: 'Взял i9-14900K, не могу определиться между водянкой и башенным кулером. Что посоветуете?',
     category: 'Вопросы',
-    replies: 15,
+    replies: [
+      { id: 'r3', author: 'CoolingKing', avatar: 'CK', content: 'Для i9 однозначно водянка 360мм минимум', timestamp: '4 часа назад', likes: 8 }
+    ],
     views: 892,
     likes: 12,
     timestamp: '5 часов назад'
@@ -133,7 +147,7 @@ const forumPosts: ForumPost[] = [
     title: 'Собрал свою первую сборку!',
     content: 'Спасибо сообществу за помощь! Ryzen 7 7800X3D + RTX 4070 Ti. Всё работает отлично!',
     category: 'Сборки',
-    replies: 8,
+    replies: [],
     views: 654,
     likes: 32,
     timestamp: '1 день назад'
@@ -145,7 +159,7 @@ const forumPosts: ForumPost[] = [
     title: 'DDR5 vs DDR4: стоит ли переплачивать?',
     content: 'Разница в цене существенная. Действительно ли DDR5 даёт такой прирост производительности?',
     category: 'Обсуждение',
-    replies: 31,
+    replies: [],
     views: 2103,
     likes: 25,
     timestamp: '2 дня назад'
@@ -157,7 +171,7 @@ const forumPosts: ForumPost[] = [
     title: 'Разогнал 7950X до 5.9 GHz!',
     content: 'Делюсь результатами разгона на воде. Температуры стабильные, бенчмарки прилагаю.',
     category: 'Разгон',
-    replies: 19,
+    replies: [],
     views: 1876,
     likes: 45,
     timestamp: '3 дня назад'
@@ -173,6 +187,8 @@ export default function Index() {
   const [newPostContent, setNewPostContent] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Обсуждение');
   const [posts, setPosts] = useState(forumPosts);
+  const [expandedPost, setExpandedPost] = useState<string | null>(null);
+  const [replyContent, setReplyContent] = useState<{ [key: string]: string }>({});
   const forumRef = useRef<HTMLDivElement>(null);
 
   const scrollToForum = () => {
@@ -262,7 +278,7 @@ export default function Index() {
       title: newPostTitle,
       content: newPostContent,
       category: selectedCategory,
-      replies: 0,
+      replies: [],
       views: 0,
       likes: 0,
       timestamp: 'Только что'
@@ -272,6 +288,57 @@ export default function Index() {
     setNewPostTitle('');
     setNewPostContent('');
     toast.success('Пост создан!');
+  };
+
+  const handleAddReply = (postId: string) => {
+    const content = replyContent[postId]?.trim();
+    if (!content) {
+      toast.error('Напишите ответ');
+      return;
+    }
+
+    const newReply: ForumReply = {
+      id: Date.now().toString(),
+      author: 'Вы',
+      avatar: 'ВЫ',
+      content,
+      timestamp: 'Только что',
+      likes: 0
+    };
+
+    setPosts(posts.map(post => 
+      post.id === postId 
+        ? { ...post, replies: [...post.replies, newReply] }
+        : post
+    ));
+
+    setReplyContent({ ...replyContent, [postId]: '' });
+    toast.success('Ответ добавлен!');
+  };
+
+  const handleLikePost = (postId: string) => {
+    setPosts(posts.map(post => 
+      post.id === postId 
+        ? { ...post, likes: post.likes + 1 }
+        : post
+    ));
+    toast.success('👍');
+  };
+
+  const handleLikeReply = (postId: string, replyId: string) => {
+    setPosts(posts.map(post => 
+      post.id === postId
+        ? {
+            ...post,
+            replies: post.replies.map(reply =>
+              reply.id === replyId
+                ? { ...reply, likes: reply.likes + 1 }
+                : reply
+            )
+          }
+        : post
+    ));
+    toast.success('👍');
   };
 
   const totalPrice = Object.values(selectedComponents).reduce((sum, comp) => sum + comp.price, 0);
@@ -556,50 +623,118 @@ export default function Index() {
           </Card>
 
           <div className="space-y-3">
-            {posts.map((post) => (
-              <Card key={post.id} className="hover:shadow-lg transition-all cursor-pointer group">
-                <CardContent className="p-5">
-                  <div className="flex gap-4">
-                    <div className="w-12 h-12 shrink-0 rounded-full bg-primary flex items-center justify-center">
-                      <span className="text-primary-foreground font-bold text-sm">
-                        {post.avatar}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-lg group-hover:text-primary transition-colors truncate">
-                            {post.title}
-                          </h3>
-                          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                            <span className="font-medium">{post.author}</span>
-                            <span>•</span>
-                            <span>{post.timestamp}</span>
-                            <span>•</span>
-                            <Badge variant="outline" className="text-xs">{post.category}</Badge>
+            {posts.map((post) => {
+              const isExpanded = expandedPost === post.id;
+              
+              return (
+                <Card key={post.id} className="hover:shadow-lg transition-all">
+                  <CardContent className="p-5">
+                    <div className="flex gap-4">
+                      <div className="w-12 h-12 shrink-0 rounded-full bg-primary flex items-center justify-center">
+                        <span className="text-primary-foreground font-bold text-sm">
+                          {post.avatar}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-lg hover:text-primary transition-colors truncate cursor-pointer"
+                                onClick={() => setExpandedPost(isExpanded ? null : post.id)}>
+                              {post.title}
+                            </h3>
+                            <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                              <span className="font-medium">{post.author}</span>
+                              <span>•</span>
+                              <span>{post.timestamp}</span>
+                              <span>•</span>
+                              <Badge variant="outline" className="text-xs">{post.category}</Badge>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{post.content}</p>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1 hover:text-primary transition-colors cursor-pointer">
-                          <Icon name="ThumbsUp" size={14} />
-                          <span>{post.likes}</span>
+                        <p className="text-sm text-muted-foreground mb-3">{post.content}</p>
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
+                          <div 
+                            className="flex items-center gap-1 hover:text-primary transition-colors cursor-pointer"
+                            onClick={() => handleLikePost(post.id)}
+                          >
+                            <Icon name="ThumbsUp" size={14} />
+                            <span>{post.likes}</span>
+                          </div>
+                          <div 
+                            className="flex items-center gap-1 hover:text-primary transition-colors cursor-pointer"
+                            onClick={() => setExpandedPost(isExpanded ? null : post.id)}
+                          >
+                            <Icon name="MessageCircle" size={14} />
+                            <span>{post.replies.length}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Icon name="Eye" size={14} />
+                            <span>{post.views}</span>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 text-xs ml-auto"
+                            onClick={() => setExpandedPost(isExpanded ? null : post.id)}
+                          >
+                            {isExpanded ? 'Свернуть' : 'Ответить'}
+                            <Icon name={isExpanded ? 'ChevronUp' : 'ChevronDown'} size={14} className="ml-1" />
+                          </Button>
                         </div>
-                        <div className="flex items-center gap-1 hover:text-primary transition-colors cursor-pointer">
-                          <Icon name="MessageCircle" size={14} />
-                          <span>{post.replies}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Icon name="Eye" size={14} />
-                          <span>{post.views}</span>
-                        </div>
+
+                        {isExpanded && (
+                          <div className="mt-4 pt-4 border-t space-y-3">
+                            {post.replies.length > 0 && (
+                              <div className="space-y-3 mb-4">
+                                {post.replies.map((reply) => (
+                                  <div key={reply.id} className="flex gap-3 p-3 bg-muted/30 rounded-lg">
+                                    <div className="w-8 h-8 shrink-0 rounded-full bg-accent flex items-center justify-center">
+                                      <span className="text-accent-foreground font-bold text-xs">
+                                        {reply.avatar}
+                                      </span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <span className="font-semibold text-sm">{reply.author}</span>
+                                        <span className="text-xs text-muted-foreground">{reply.timestamp}</span>
+                                      </div>
+                                      <p className="text-sm mb-2">{reply.content}</p>
+                                      <div 
+                                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary cursor-pointer w-fit"
+                                        onClick={() => handleLikeReply(post.id, reply.id)}
+                                      >
+                                        <Icon name="ThumbsUp" size={12} />
+                                        <span>{reply.likes}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            <div className="flex gap-3">
+                              <Textarea
+                                placeholder="Написать ответ..."
+                                value={replyContent[post.id] || ''}
+                                onChange={(e) => setReplyContent({ ...replyContent, [post.id]: e.target.value })}
+                                rows={3}
+                                className="flex-1"
+                              />
+                              <Button 
+                                onClick={() => handleAddReply(post.id)}
+                                className="h-auto"
+                              >
+                                <Icon name="Send" size={16} />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
 
           <div className="flex justify-center pt-4">
