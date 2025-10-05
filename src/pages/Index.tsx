@@ -3,6 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 
@@ -14,41 +17,76 @@ interface Component {
   specs: string;
   power?: number;
   socket?: string;
-  compatible?: string[];
 }
 
-const components: Component[] = [
-  { id: '1', name: 'Intel Core i7-12700K', category: 'cpu', price: 349.99, specs: '12 ядер, 20 потоков, 3.6 GHz', power: 125, socket: 'LGA1700' },
-  { id: '2', name: 'AMD Ryzen 7 5800X', category: 'cpu', price: 299.99, specs: '8 ядер, 16 потоков, 3.8 GHz', power: 105, socket: 'AM4' },
-  { id: '3', name: 'NVIDIA RTX 4070', category: 'gpu', price: 599.99, specs: '12GB GDDR6X, 5888 CUDA', power: 200 },
-  { id: '4', name: 'AMD RX 7800 XT', category: 'gpu', price: 499.99, specs: '16GB GDDR6, 3840 потоков', power: 263 },
-  { id: '5', name: 'Corsair Vengeance 32GB', category: 'ram', price: 129.99, specs: 'DDR5-5600, 2x16GB', power: 10 },
-  { id: '6', name: 'G.Skill Trident Z5 32GB', category: 'ram', price: 149.99, specs: 'DDR5-6000, 2x16GB', power: 12 },
-  { id: '7', name: 'ASUS ROG STRIX Z690', category: 'motherboard', price: 329.99, specs: 'ATX, Wi-Fi 6E, DDR5', socket: 'LGA1700', compatible: ['LGA1700'] },
-  { id: '8', name: 'MSI B550 GAMING', category: 'motherboard', price: 159.99, specs: 'ATX, PCIe 4.0, DDR4', socket: 'AM4', compatible: ['AM4'] },
-  { id: '9', name: 'Corsair RM850x', category: 'psu', price: 139.99, specs: '850W, 80+ Gold', power: 850 },
-  { id: '10', name: 'EVGA SuperNOVA 750W', category: 'psu', price: 119.99, specs: '750W, 80+ Gold', power: 750 },
-  { id: '11', name: 'Samsung 990 PRO 1TB', category: 'storage', price: 129.99, specs: 'NVMe M.2, 7450 MB/s', power: 5 },
-];
+const generateComponents = (): Component[] => {
+  const cpus: Component[] = [
+    { id: 'cpu1', name: 'Intel Core i9-14900K', category: 'cpu', price: 589.99, specs: '24 ядра, 5.8 GHz', power: 253, socket: 'LGA1700' },
+    { id: 'cpu2', name: 'Intel Core i7-14700K', category: 'cpu', price: 419.99, specs: '20 ядер, 5.6 GHz', power: 253, socket: 'LGA1700' },
+    { id: 'cpu3', name: 'Intel Core i5-14600K', category: 'cpu', price: 319.99, specs: '14 ядер, 5.3 GHz', power: 181, socket: 'LGA1700' },
+    { id: 'cpu4', name: 'AMD Ryzen 9 7950X', category: 'cpu', price: 549.99, specs: '16 ядер, 5.7 GHz', power: 170, socket: 'AM5' },
+    { id: 'cpu5', name: 'AMD Ryzen 9 7900X', category: 'cpu', price: 429.99, specs: '12 ядер, 5.4 GHz', power: 170, socket: 'AM5' },
+    { id: 'cpu6', name: 'AMD Ryzen 7 7800X3D', category: 'cpu', price: 449.99, specs: '8 ядер, 5.0 GHz, 3D Cache', power: 120, socket: 'AM5' },
+    { id: 'cpu7', name: 'AMD Ryzen 7 7700X', category: 'cpu', price: 299.99, specs: '8 ядер, 5.4 GHz', power: 105, socket: 'AM5' },
+    { id: 'cpu8', name: 'AMD Ryzen 5 7600X', category: 'cpu', price: 229.99, specs: '6 ядер, 5.3 GHz', power: 105, socket: 'AM5' },
+  ];
+
+  const gpus: Component[] = [
+    { id: 'gpu1', name: 'NVIDIA RTX 4090', category: 'gpu', price: 1599.99, specs: '24GB GDDR6X, 16384 CUDA', power: 450 },
+    { id: 'gpu2', name: 'NVIDIA RTX 4080 SUPER', category: 'gpu', price: 999.99, specs: '16GB GDDR6X, 10240 CUDA', power: 320 },
+    { id: 'gpu3', name: 'NVIDIA RTX 4070 Ti SUPER', category: 'gpu', price: 799.99, specs: '16GB GDDR6X, 8448 CUDA', power: 285 },
+    { id: 'gpu4', name: 'NVIDIA RTX 4070 SUPER', category: 'gpu', price: 599.99, specs: '12GB GDDR6X, 7168 CUDA', power: 220 },
+    { id: 'gpu5', name: 'NVIDIA RTX 4070', category: 'gpu', price: 549.99, specs: '12GB GDDR6X, 5888 CUDA', power: 200 },
+    { id: 'gpu6', name: 'AMD RX 7900 XTX', category: 'gpu', price: 899.99, specs: '24GB GDDR6, 6144 потоков', power: 355 },
+    { id: 'gpu7', name: 'AMD RX 7900 XT', category: 'gpu', price: 749.99, specs: '20GB GDDR6, 5376 потоков', power: 300 },
+    { id: 'gpu8', name: 'AMD RX 7800 XT', category: 'gpu', price: 499.99, specs: '16GB GDDR6, 3840 потоков', power: 263 },
+    { id: 'gpu9', name: 'AMD RX 7700 XT', category: 'gpu', price: 449.99, specs: '12GB GDDR6, 3456 потоков', power: 245 },
+  ];
+
+  const rams: Component[] = [
+    { id: 'ram1', name: 'Corsair Vengeance RGB 64GB DDR5-6000', category: 'ram', price: 249.99, specs: '2x32GB, CL30', power: 12 },
+    { id: 'ram2', name: 'G.Skill Trident Z5 RGB 32GB DDR5-6400', category: 'ram', price: 169.99, specs: '2x16GB, CL32', power: 10 },
+    { id: 'ram3', name: 'Kingston Fury Beast 32GB DDR5-5600', category: 'ram', price: 129.99, specs: '2x16GB, CL36', power: 10 },
+    { id: 'ram4', name: 'Corsair Vengeance 32GB DDR4-3600', category: 'ram', price: 89.99, specs: '2x16GB, CL18', power: 8 },
+  ];
+
+  const motherboards: Component[] = [
+    { id: 'mb1', name: 'ASUS ROG MAXIMUS Z790', category: 'motherboard', price: 599.99, specs: 'ATX, Wi-Fi 7, DDR5', socket: 'LGA1700' },
+    { id: 'mb2', name: 'MSI MPG Z790 EDGE', category: 'motherboard', price: 399.99, specs: 'ATX, Wi-Fi 6E, DDR5', socket: 'LGA1700' },
+    { id: 'mb3', name: 'ASUS TUF GAMING B760', category: 'motherboard', price: 229.99, specs: 'ATX, Wi-Fi 6, DDR5', socket: 'LGA1700' },
+    { id: 'mb4', name: 'ASUS ROG STRIX X670E', category: 'motherboard', price: 499.99, specs: 'ATX, Wi-Fi 6E, DDR5', socket: 'AM5' },
+    { id: 'mb5', name: 'MSI MAG B650 TOMAHAWK', category: 'motherboard', price: 249.99, specs: 'ATX, Wi-Fi 6, DDR5', socket: 'AM5' },
+    { id: 'mb6', name: 'ASRock B650 Pro RS', category: 'motherboard', price: 179.99, specs: 'ATX, DDR5', socket: 'AM5' },
+  ];
+
+  const psus: Component[] = [
+    { id: 'psu1', name: 'Corsair HX1200i', category: 'psu', price: 279.99, specs: '1200W, 80+ Platinum', power: 1200 },
+    { id: 'psu2', name: 'Corsair RM1000x', category: 'psu', price: 189.99, specs: '1000W, 80+ Gold', power: 1000 },
+    { id: 'psu3', name: 'EVGA SuperNOVA 850W', category: 'psu', price: 139.99, specs: '850W, 80+ Gold', power: 850 },
+    { id: 'psu4', name: 'Seasonic FOCUS 750W', category: 'psu', price: 109.99, specs: '750W, 80+ Gold', power: 750 },
+  ];
+
+  const storages: Component[] = [
+    { id: 'ssd1', name: 'Samsung 990 PRO 2TB', category: 'storage', price: 199.99, specs: 'NVMe M.2, 7450 MB/s', power: 6 },
+    { id: 'ssd2', name: 'WD Black SN850X 1TB', category: 'storage', price: 129.99, specs: 'NVMe M.2, 7300 MB/s', power: 5 },
+    { id: 'ssd3', name: 'Crucial P5 Plus 1TB', category: 'storage', price: 99.99, specs: 'NVMe M.2, 6600 MB/s', power: 5 },
+  ];
+
+  return [...cpus, ...gpus, ...rams, ...motherboards, ...psus, ...storages];
+};
+
+const components = generateComponents();
 
 const prebuiltConfigs = [
-  {
-    name: 'Gaming Starter',
-    description: 'Для 1080p гейминга',
-    components: ['2', '4', '5', '8', '10', '11'],
-    price: 1360
-  },
-  {
-    name: 'Workstation Pro',
-    description: 'Рендеринг и монтаж',
-    components: ['1', '3', '6', '7', '9', '11'],
-    price: 1799
-  },
+  { name: 'Gaming Starter', description: '1080p гейминг', components: ['cpu8', 'gpu8', 'ram3', 'mb6', 'psu4', 'ssd3'], price: 1590 },
+  { name: 'High-End Gaming', description: '4K ультра', components: ['cpu6', 'gpu2', 'ram2', 'mb4', 'psu2', 'ssd1'], price: 3279 },
+  { name: 'Workstation Pro', description: 'Рендеринг 3D', components: ['cpu1', 'gpu1', 'ram1', 'mb1', 'psu1', 'ssd1'], price: 3919 },
 ];
 
 export default function Index() {
   const [selectedComponents, setSelectedComponents] = useState<{ [key: string]: Component }>({});
   const [activeTab, setActiveTab] = useState('constructor');
+  const [openPopovers, setOpenPopovers] = useState<{ [key: string]: boolean }>({});
 
   const categoryNames = {
     cpu: 'Процессор',
@@ -68,21 +106,10 @@ export default function Index() {
     storage: 'HardDrive'
   };
 
-  const addComponent = (component: Component) => {
-    setSelectedComponents(prev => ({
-      ...prev,
-      [component.category]: component
-    }));
-    toast.success(`${component.name} добавлен в сборку`);
-  };
-
-  const removeComponent = (category: string) => {
-    setSelectedComponents(prev => {
-      const updated = { ...prev };
-      delete updated[category];
-      return updated;
-    });
-    toast.info('Компонент удалён из сборки');
+  const selectComponent = (component: Component) => {
+    setSelectedComponents(prev => ({ ...prev, [component.category]: component }));
+    setOpenPopovers(prev => ({ ...prev, [component.category]: false }));
+    toast.success(`${component.name} добавлен`);
   };
 
   const loadPrebuilt = (config: typeof prebuiltConfigs[0]) => {
@@ -93,225 +120,180 @@ export default function Index() {
     });
     setSelectedComponents(newSelection);
     setActiveTab('constructor');
-    toast.success(`Загружена сборка "${config.name}"`);
+    toast.success(`Загружена "${config.name}"`);
   };
 
   const totalPrice = Object.values(selectedComponents).reduce((sum, comp) => sum + comp.price, 0);
   const totalPower = Object.values(selectedComponents).reduce((sum, comp) => sum + (comp.power || 0), 0);
-  
   const psu = selectedComponents.psu;
-  const isCompatible = !selectedComponents.cpu || !selectedComponents.motherboard || 
-    selectedComponents.cpu.socket === selectedComponents.motherboard.socket;
+  const isCompatible = !selectedComponents.cpu || !selectedComponents.motherboard || selectedComponents.cpu.socket === selectedComponents.motherboard.socket;
   const isPowerSufficient = !psu || psu.power >= totalPower * 1.2;
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-6">
+      <header className="border-b bg-card sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">PC Builder</h1>
-              <p className="text-muted-foreground mt-1">Собери идеальный компьютер</p>
+              <h1 className="text-2xl font-bold">PC Builder</h1>
+              <p className="text-sm text-muted-foreground">Собери идеальный компьютер</p>
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-6">
               <div className="text-right">
-                <p className="text-sm text-muted-foreground">Общая стоимость</p>
-                <p className="text-2xl font-bold text-primary">${totalPrice.toFixed(2)}</p>
+                <p className="text-xs text-muted-foreground">Стоимость</p>
+                <p className="text-xl font-bold text-primary">${totalPrice.toFixed(2)}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-muted-foreground">Потребление</p>
-                <p className={`text-2xl font-bold ${isPowerSufficient ? 'text-accent' : 'text-destructive'}`}>
-                  {totalPower}W
-                </p>
+                <p className="text-xs text-muted-foreground">Мощность</p>
+                <p className={`text-xl font-bold ${isPowerSufficient ? 'text-accent' : 'text-destructive'}`}>{totalPower}W</p>
               </div>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <div className="container mx-auto px-4 py-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="constructor">
-              <Icon name="Hammer" size={16} className="mr-2" />
-              Конструктор
-            </TabsTrigger>
-            <TabsTrigger value="prebuilt">
-              <Icon name="Package" size={16} className="mr-2" />
-              Готовые сборки
-            </TabsTrigger>
-            <TabsTrigger value="compatibility">
-              <Icon name="CheckCircle2" size={16} className="mr-2" />
-              Совместимость
-            </TabsTrigger>
+            <TabsTrigger value="constructor"><Icon name="Hammer" size={16} className="mr-2" />Конструктор</TabsTrigger>
+            <TabsTrigger value="prebuilt"><Icon name="Package" size={16} className="mr-2" />Готовые</TabsTrigger>
+            <TabsTrigger value="compatibility"><Icon name="CheckCircle2" size={16} className="mr-2" />Проверка</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="constructor" className="space-y-6">
-            {(Object.keys(categoryNames) as Array<keyof typeof categoryNames>).map((category) => (
-              <Card key={category}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Icon name={categoryIcons[category]} className="text-primary" size={20} />
-                      </div>
-                      <div>
-                        <CardTitle>{categoryNames[category]}</CardTitle>
-                        {selectedComponents[category] && (
-                          <CardDescription className="mt-1">
-                            {selectedComponents[category].name} - ${selectedComponents[category].price}
-                          </CardDescription>
-                        )}
-                      </div>
-                    </div>
-                    {selectedComponents[category] && (
-                      <Button variant="outline" size="sm" onClick={() => removeComponent(category)}>
-                        <Icon name="X" size={16} />
-                      </Button>
+          <TabsContent value="constructor" className="space-y-3">
+            {(Object.keys(categoryNames) as Array<keyof typeof categoryNames>).map((category) => {
+              const categoryComponents = components.filter(c => c.category === category);
+              const selected = selectedComponents[category];
+
+              return (
+                <div key={category} className="flex items-center gap-3 p-3 border rounded-lg bg-card">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <Icon name={categoryIcons[category]} className="text-primary" size={20} />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium mb-1">{categoryNames[category]}</p>
+                    {selected ? (
+                      <p className="text-xs text-muted-foreground truncate">{selected.name} - ${selected.price}</p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">Не выбрано</p>
                     )}
                   </div>
+
+                  <Popover open={openPopovers[category]} onOpenChange={(open) => setOpenPopovers(prev => ({ ...prev, [category]: open }))}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="shrink-0">
+                        <Icon name="Search" size={16} className="mr-1" />
+                        Выбрать
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 w-96" align="end">
+                      <Command>
+                        <CommandInput placeholder={`Поиск ${categoryNames[category].toLowerCase()}...`} />
+                        <CommandList>
+                          <CommandEmpty>Не найдено</CommandEmpty>
+                          <CommandGroup>
+                            {categoryComponents.map((comp) => (
+                              <CommandItem
+                                key={comp.id}
+                                value={comp.name}
+                                onSelect={() => selectComponent(comp)}
+                                className="flex justify-between"
+                              >
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium truncate">{comp.name}</p>
+                                  <p className="text-xs text-muted-foreground">{comp.specs}</p>
+                                </div>
+                                <span className="ml-3 font-semibold text-primary shrink-0">${comp.price}</span>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              );
+            })}
+          </TabsContent>
+
+          <TabsContent value="prebuilt" className="grid md:grid-cols-3 gap-4">
+            {prebuiltConfigs.map((config) => (
+              <Card key={config.name} className="hover:border-primary transition-colors">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">{config.name}</CardTitle>
+                  <CardDescription className="text-xs">{config.description}</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {components
-                      .filter(c => c.category === category)
-                      .map((component) => (
-                        <div
-                          key={component.id}
-                          className={`p-4 border rounded-lg transition-all hover:border-primary ${
-                            selectedComponents[category]?.id === component.id ? 'border-primary bg-primary/5' : ''
-                          }`}
-                        >
-                          <h4 className="font-semibold mb-1">{component.name}</h4>
-                          <p className="text-sm text-muted-foreground mb-3">{component.specs}</p>
-                          <div className="flex items-center justify-between">
-                            <span className="text-lg font-bold">${component.price}</span>
-                            <Button
-                              size="sm"
-                              onClick={() => addComponent(component)}
-                              disabled={selectedComponents[category]?.id === component.id}
-                            >
-                              {selectedComponents[category]?.id === component.id ? 'Выбрано' : 'Добавить'}
-                            </Button>
-                          </div>
+                <CardContent className="space-y-3">
+                  <div className="space-y-1">
+                    {config.components.slice(0, 3).map(id => {
+                      const comp = components.find(c => c.id === id);
+                      return comp ? (
+                        <div key={id} className="flex justify-between text-xs">
+                          <span className="text-muted-foreground truncate">{comp.name}</span>
+                          <span className="ml-2 shrink-0">${comp.price}</span>
                         </div>
-                      ))}
+                      ) : null;
+                    })}
+                    <p className="text-xs text-muted-foreground">+ещё {config.components.length - 3} компонентов</p>
+                  </div>
+                  <div className="pt-3 border-t flex items-center justify-between">
+                    <span className="font-bold">${config.price}</span>
+                    <Button size="sm" onClick={() => loadPrebuilt(config)}>Загрузить</Button>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </TabsContent>
 
-          <TabsContent value="prebuilt" className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-6">
-              {prebuiltConfigs.map((config) => (
-                <Card key={config.name} className="hover:border-primary transition-colors">
-                  <CardHeader>
-                    <CardTitle>{config.name}</CardTitle>
-                    <CardDescription>{config.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      {config.components.map(id => {
-                        const comp = components.find(c => c.id === id);
-                        return comp ? (
-                          <div key={id} className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">{comp.name}</span>
-                            <span>${comp.price}</span>
-                          </div>
-                        ) : null;
-                      })}
-                    </div>
-                    <div className="pt-4 border-t flex items-center justify-between">
-                      <span className="text-xl font-bold">${config.price}</span>
-                      <Button onClick={() => loadPrebuilt(config)}>
-                        Загрузить сборку
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+          <TabsContent value="compatibility" className="space-y-3">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-4 border rounded-lg">
+                <Icon name={isCompatible ? 'CheckCircle2' : 'AlertCircle'} className={isCompatible ? 'text-accent' : 'text-destructive'} size={24} />
+                <div className="flex-1">
+                  <p className="font-medium">Совместимость CPU/MB</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedComponents.cpu && selectedComponents.motherboard
+                      ? `${selectedComponents.cpu.socket} - ${selectedComponents.motherboard.socket}`
+                      : 'Выберите компоненты'}
+                  </p>
+                </div>
+                <Badge variant={isCompatible ? 'default' : 'destructive'}>{isCompatible ? 'OK' : 'Несовместимо'}</Badge>
+              </div>
+
+              <div className="flex items-center gap-3 p-4 border rounded-lg">
+                <Icon name={isPowerSufficient ? 'CheckCircle2' : 'AlertCircle'} className={isPowerSufficient ? 'text-accent' : 'text-destructive'} size={24} />
+                <div className="flex-1">
+                  <p className="font-medium">Мощность БП</p>
+                  <p className="text-sm text-muted-foreground">
+                    {psu ? `${totalPower}W / ${psu.power}W` : 'Выберите БП'}
+                  </p>
+                </div>
+                <Badge variant={isPowerSufficient ? 'default' : 'destructive'}>{isPowerSufficient ? 'OK' : 'Мало'}</Badge>
+              </div>
+
+              <div className="flex items-center gap-3 p-4 border rounded-lg">
+                <Icon name="Info" className="text-primary" size={24} />
+                <div className="flex-1">
+                  <p className="font-medium">Прогресс сборки</p>
+                  <p className="text-sm text-muted-foreground">{Object.keys(selectedComponents).length} из {Object.keys(categoryNames).length}</p>
+                </div>
+                <Badge variant="outline">{Math.round((Object.keys(selectedComponents).length / Object.keys(categoryNames).length) * 100)}%</Badge>
+              </div>
             </div>
-          </TabsContent>
 
-          <TabsContent value="compatibility" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Проверка совместимости</CardTitle>
-                <CardDescription>Автоматическая валидация выбранных компонентов</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <Icon name={isCompatible ? 'CheckCircle2' : 'AlertCircle'} 
-                        className={isCompatible ? 'text-accent' : 'text-destructive'} size={24} />
-                      <div>
-                        <p className="font-medium">Совместимость процессора и материнской платы</p>
-                        <p className="text-sm text-muted-foreground">
-                          {selectedComponents.cpu && selectedComponents.motherboard
-                            ? `${selectedComponents.cpu.socket} - ${selectedComponents.motherboard.socket}`
-                            : 'Выберите процессор и материнскую плату'
-                          }
-                        </p>
-                      </div>
-                    </div>
-                    <Badge variant={isCompatible ? 'default' : 'destructive'}>
-                      {isCompatible ? 'Совместимо' : 'Несовместимо'}
-                    </Badge>
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <Icon name={isPowerSufficient ? 'CheckCircle2' : 'AlertCircle'} 
-                        className={isPowerSufficient ? 'text-accent' : 'text-destructive'} size={24} />
-                      <div>
-                        <p className="font-medium">Мощность блока питания</p>
-                        <p className="text-sm text-muted-foreground">
-                          {psu 
-                            ? `${totalPower}W потребление / ${psu.power}W доступно`
-                            : 'Выберите блок питания'
-                          }
-                        </p>
-                      </div>
-                    </div>
-                    <Badge variant={isPowerSufficient ? 'default' : 'destructive'}>
-                      {isPowerSufficient ? 'Достаточно' : 'Недостаточно'}
-                    </Badge>
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <Icon name="Info" className="text-primary" size={24} />
-                      <div>
-                        <p className="font-medium">Компоненты выбраны</p>
-                        <p className="text-sm text-muted-foreground">
-                          {Object.keys(selectedComponents).length} из {Object.keys(categoryNames).length}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge variant="outline">
-                      {Math.round((Object.keys(selectedComponents).length / Object.keys(categoryNames).length) * 100)}%
-                    </Badge>
+            {Object.keys(selectedComponents).length === Object.keys(categoryNames).length && isCompatible && isPowerSufficient && (
+              <div className="p-6 bg-accent/10 border-accent border rounded-lg">
+                <div className="flex items-center gap-3 mb-4">
+                  <Icon name="PartyPopper" className="text-accent" size={28} />
+                  <div>
+                    <h3 className="font-bold text-lg">Сборка готова!</h3>
+                    <p className="text-sm text-muted-foreground">Все совместимо, можно заказывать</p>
                   </div>
                 </div>
-
-                {Object.keys(selectedComponents).length === Object.keys(categoryNames).length && isCompatible && isPowerSufficient && (
-                  <div className="mt-6 p-6 bg-accent/10 border-accent border rounded-lg">
-                    <div className="flex items-center gap-3 mb-4">
-                      <Icon name="PartyPopper" className="text-accent" size={28} />
-                      <div>
-                        <h3 className="font-bold text-lg">Сборка готова!</h3>
-                        <p className="text-sm text-muted-foreground">Все компоненты совместимы и готовы к заказу</p>
-                      </div>
-                    </div>
-                    <Button className="w-full" size="lg">
-                      Перейти к оформлению - ${totalPrice.toFixed(2)}
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                <Button className="w-full" size="lg">Оформить заказ - ${totalPrice.toFixed(2)}</Button>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
